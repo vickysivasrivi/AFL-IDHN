@@ -1,0 +1,7 @@
+pandas
+numpy
+scikit-learn
+scipy
+paho-mqtt
+matplotlib
+seaborn

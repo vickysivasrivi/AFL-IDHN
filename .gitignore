@@ -1,0 +1,8 @@
+data/
+Preprocessed/
+preprocessing.py
+*.zip
+*.csv
+__pycache__/
+*.pyc
+project/Lib/
