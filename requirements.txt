@@ -1,7 +1,8 @@
-pandas
-numpy
-scikit-learn
-scipy
-paho-mqtt
-matplotlib
-seaborn
+pandas>=1.5.0
+numpy>=1.21.0
+scikit-learn>=1.1.0
+scipy>=1.9.0
+paho-mqtt>=1.6.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
+tensorflow>=2.10.0
