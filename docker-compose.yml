@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  federated-server:
+    build: .
+    container_name: federated-server
+    environment:
+      - MQTT_BROKER=broker.emqx.io
+      - MQTT_PORT=1883
+      - MQTT_USERNAME=vignesh_2181
+      - MQTT_PASSWORD=Vignesh@2181
+      - ROLE=server
+    volumes:
+      - ./src:/app/src
+
+  federated-client:
+    build: .
+    container_name: federated-client
+    environment:
+      - MQTT_BROKER=broker.emqx.io
+      - MQTT_PORT=1883
+      - MQTT_USERNAME=vignesh_2181
+      - MQTT_PASSWORD=Vignesh@2181
+      - ROLE=client
+    volumes:
+      - ./src:/app/src
