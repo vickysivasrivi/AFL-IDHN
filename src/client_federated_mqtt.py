@@ -115,16 +115,37 @@ class FLClient:
         else:
             print(f"[{CLIENT_ID}] Start signal received, but not all layers are here yet ({len(self.weight_layers)}/{self.expected_layers}). Waiting.")
 
+    # def train_and_update(self):
+    #     self.model.fit(self.X, self.y, epochs=LOCAL_EPOCHS, batch_size=BATCH_SIZE, verbose=1)
+    #     weights = self.model.get_weights()
+    #     payload = {
+    #         "client_id": CLIENT_ID, "round": self.current_round,
+    #         "num_samples": len(self.X), "meta": {},
+    #         "weights": serialize_weights(weights)
+    #     }
+    #     self.mqttc.publish(TOPIC_CLIENT_UPDATE, serialize_message(payload), qos=1, retain=False)
+    #     print(f"[{CLIENT_ID}] Published update for round {self.current_round}")
+
     def train_and_update(self):
-        self.model.fit(self.X, self.y, epochs=LOCAL_EPOCHS, batch_size=BATCH_SIZE, verbose=1)
+        # The 'fit' method returns a History object that contains the training loss
+        history = self.model.fit(self.X, self.y, epochs=LOCAL_EPOCHS, batch_size=BATCH_SIZE, verbose=1)
+        
+        # --- NEW: Capture the average loss from the last epoch ---
+        final_loss = history.history['loss'][-1]
+        
         weights = self.model.get_weights()
+        
+        # --- NEW: Add the loss to the payload ---
         payload = {
             "client_id": CLIENT_ID, "round": self.current_round,
-            "num_samples": len(self.X), "meta": {},
+            "num_samples": len(self.X),
+            "loss": final_loss, # Add the calculated loss
+            "meta": {},
             "weights": serialize_weights(weights)
         }
+        
         self.mqttc.publish(TOPIC_CLIENT_UPDATE, serialize_message(payload), qos=1, retain=False)
-        print(f"[{CLIENT_ID}] Published update for round {self.current_round}")
+        print(f"[{CLIENT_ID}] Published update for round {self.current_round} with loss: {final_loss:.4f}")
 
     def loop_forever(self): self.mqttc.loop_forever()
 

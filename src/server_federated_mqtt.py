@@ -13,9 +13,8 @@ import json
 # Ensure this utility file is accessible and named correctly
 from utils_mqtt_fl import (
     serialize_weights, deserialize_weights, serialize_message, deserialize_message,
-    weighted_average_adaptive
+    adaptive_federated_averaging # Changed from weighted_average_adaptive
 )
-
 # --- Configuration ---
 BROKER_HOST = os.environ.get("MQTT_HOST", "192.168.0.250")
 BROKER_PORT = int(os.environ.get("MQTT_PORT", "1883"))
@@ -86,6 +85,32 @@ class AggregationServer:
         print(f"[SERVER] Disconnected with rc={rc}. The loop will pause.")
         self.is_connected = False
 
+    # def on_message(self, client, userdata, msg):
+    #     topic = msg.topic
+        
+    #     try:
+    #         payload_str = msg.payload.decode("utf-8")
+    #     except UnicodeDecodeError:
+    #         payload_str = None
+
+    #     if topic == TOPIC_CLIENT_READY and payload_str:
+    #         client_id = deserialize_message(payload_str).get("client_id")
+    #         if client_id:
+    #             self.ready_clients.add(client_id)
+    #             print(f"[SERVER] Client ready: {client_id} ({len(self.ready_clients)} total)")
+
+    #     elif topic == TOPIC_CLIENT_UPDATE and payload_str:
+    #         try:
+    #             data = deserialize_message(payload_str)
+    #             if data.get("round") == self.current_round:
+    #                 weights = deserialize_weights(data["weights"])
+    #                 self.updates.append({"weights": weights, "num_samples": data.get("num_samples", 0), "meta": data.get("meta", {})})
+    #                 print(f"[SERVER] Received update from {data['client_id']} for round {self.current_round} ({len(self.updates)}/{MIN_CLIENTS_PER_ROUND})")
+    #             else:
+    #                 print(f"[SERVER] Received stale update from {data['client_id']} for round {data.get('round')}. Ignoring.")
+    #         except Exception as e:
+    #             print(f"[SERVER] Error processing update: {e}")
+
     def on_message(self, client, userdata, msg):
         topic = msg.topic
         
@@ -105,7 +130,15 @@ class AggregationServer:
                 data = deserialize_message(payload_str)
                 if data.get("round") == self.current_round:
                     weights = deserialize_weights(data["weights"])
-                    self.updates.append({"weights": weights, "num_samples": data.get("num_samples", 0), "meta": data.get("meta", {})})
+                    
+                    # --- DEFINITIVE FIX: Extract and append the loss value ---
+                    self.updates.append({
+                        "weights": weights,
+                        "num_samples": data.get("num_samples", 0),
+                        "loss": data.get("loss", 1.0), # Get the loss, default to 1.0 if missing
+                        "meta": data.get("meta", {})
+                    })
+
                     print(f"[SERVER] Received update from {data['client_id']} for round {self.current_round} ({len(self.updates)}/{MIN_CLIENTS_PER_ROUND})")
                 else:
                     print(f"[SERVER] Received stale update from {data['client_id']} for round {data.get('round')}. Ignoring.")
@@ -134,11 +167,19 @@ class AggregationServer:
         print(f"[SERVER] Published round start signal.")
 
 
+    # def aggregate_and_broadcast(self):
+    #     new_weights = weighted_average_adaptive(self.updates)
+    #     if new_weights:
+    #         self.global_model.set_weights(new_weights)
+    #         print("[SERVER] Global model updated successfully.")
+
     def aggregate_and_broadcast(self):
-        new_weights = weighted_average_adaptive(self.updates)
+        # --- MODIFIED: Call the new adaptive function ---
+        new_weights = adaptive_federated_averaging(self.updates)
+        
         if new_weights:
             self.global_model.set_weights(new_weights)
-            print("[SERVER] Global model updated successfully.")
+            print("[SERVER] Global model updated successfully using adaptive weights.")
 
     def run_server(self):
         self.mqttc.loop_start()
