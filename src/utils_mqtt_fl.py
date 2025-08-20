@@ -3,6 +3,9 @@
 import json
 import base64
 import numpy as np
+import tensorflow as tf
+import numpy as np
+
 # No pickle needed in this version
 
 def serialize_weights(weights):
@@ -82,3 +85,40 @@ def adaptive_federated_averaging(updates):
                 new_weights[j] += w.astype(np.float32) * client_weight
     
     return new_weights
+
+
+def quantize_model_tflite(model):
+    """
+    Converts a Keras model to a quantized TensorFlow Lite model.
+    Returns the model as a byte array.
+    """
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+    
+    # This enables the standard 8-bit quantization
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
+    
+    # --- DEFINITIVE FIX for the LSTM Error ---
+    # This tells the converter to include TensorFlow's core operations (like TensorListReserve)
+    # in the final model instead of trying to convert them, which avoids the error.
+    converter.target_spec.supported_ops = [
+        tf.lite.OpsSet.TFLITE_BUILTINS, # Enable TFLite ops.
+        tf.lite.OpsSet.SELECT_TF_OPS    # Enable TensorFlow ops.
+    ]
+    # This flag is also recommended by the error message to prevent the conversion failure.
+    converter._experimental_lower_tensor_list_ops = False
+    # --- END OF FIX ---
+
+    quantized_tflite_model = converter.convert()
+    return quantized_tflite_model
+
+def set_tflite_model_weights(interpreter, weights):
+    """
+    Sets the weights of a TensorFlow Lite interpreter from a list of numpy arrays.
+    NOTE: This is a more advanced function. For our workflow, we will send the
+    already-quantized model, so the client won't need to set weights manually.
+    This is here for reference.
+    """
+    for i, tensor_details in enumerate(interpreter.get_tensor_details()):
+        if tensor_details['name'] in [w.name for w in model.trainable_weights]:
+             # Find the corresponding weight in the list and set it
+            interpreter.set_tensor(tensor_details['index'], weights[i])
