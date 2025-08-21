@@ -3,122 +3,131 @@
 import json
 import base64
 import numpy as np
-import tensorflow as tf
-import numpy as np
+from typing import Dict, Any, List, Optional
 
-# No pickle needed in this version
+# --- Serialization Functions ---
+def serialize_weights(weights: List[np.ndarray]) -> str:
+    """Serializes a list of NumPy arrays (model weights) into a text-safe JSON string.
 
-def serialize_weights(weights):
-    """
-    Serializes a list of NumPy arrays (model weights) into a text-safe JSON string
-    using base64 encoding for the binary data.
-    """
-    ser = [{"shape": w.shape, "dtype": str(w.dtype), "data": base64.b64encode(w.tobytes()).decode("utf-8")} for w in weights]
-    return json.dumps({"weights": ser})
+    Args:
+        weights: A list of NumPy arrays from model.get_weights().
 
-def deserialize_weights(payload):
+    Returns:
+        A JSON string containing the serialized weights.
     """
-    Deserializes a JSON string created by serialize_weights back into a list
-    of NumPy arrays.
+    ser_weights = [
+        {
+            "shape": w.shape,
+            "dtype": str(w.dtype),
+            "data": base64.b64encode(w.tobytes()).decode("utf-8"),
+        }
+        for w in weights
+    ]
+    return json.dumps({"weights": ser_weights})
+
+
+def deserialize_weights(payload: str) -> List[np.ndarray]:
+    """Deserializes a JSON string back into a list of NumPy arrays.
+
+    Args:
+        payload: A JSON string containing the serialized weights.
+
+    Returns:
+        A list of NumPy arrays for model.set_weights().
     """
     obj = json.loads(payload)
-    return [np.frombuffer(base64.b64decode(item["data"]), dtype=np.dtype(item["dtype"])).reshape(item["shape"]) for item in obj["weights"]]
+    return [
+        np.frombuffer(
+            base64.b64decode(item["data"]), dtype=np.dtype(item["dtype"])
+        ).reshape(item["shape"])
+        for item in obj["weights"]
+    ]
 
-def serialize_message(obj):
+
+def serialize_message(obj: Dict[str, Any]) -> str:
     """Serializes a simple dictionary to a JSON string."""
     return json.dumps(obj)
 
-def deserialize_message(payload):
+
+def deserialize_message(payload: str) -> Dict[str, Any]:
     """Deserializes a JSON string to a dictionary."""
     return json.loads(payload)
 
-def weighted_average_adaptive(updates):
-    """Performs weighted averaging on the received updates."""
-    if not updates: return None
-    total_weight = 0; new_weights = None
-    for u in updates:
-        num_samples = u.get("num_samples", 0)
-        if num_samples == 0: continue
-        weight = float(num_samples); total_weight += weight
-        if new_weights is None:
-            new_weights = [w.astype(np.float32) * weight for w in u["weights"]]
-        else:
-            for i, w in enumerate(u["weights"]):
-                new_weights[i] += w.astype(np.float32) * weight
-    if total_weight == 0: return None
-    return [w / total_weight for w in new_weights]
 
+# --- Aggregation Functions ---
+def adaptive_federated_averaging(
+    updates: List[Dict[str, Any]]
+) -> Optional[List[np.ndarray]]:
+    """Performs adaptive federated averaging based on client loss.
 
-def adaptive_federated_averaging(updates):
-    """
-    Performs federated averaging with weights inversely proportional to client loss.
+    Gives a higher weight to clients that report a lower training loss.
+
+    Args:
+        updates: A list of update dictionaries from clients.
+
+    Returns:
+        A list of NumPy arrays representing the new global model weights.
     """
     if not updates:
         return None
 
     print("[SERVER] Using Adaptive Federated Averaging (Loss-based)...")
-    
-    # --- Adaptive Weighting Logic ---
-    # A small epsilon to prevent division by zero if loss is 0.0
-    epsilon = 1e-6 
-    
-    # Step 1: Calculate the inverse of each client's loss.
-    # We add epsilon for numerical stability. Lower loss -> higher inverse value.
+    epsilon = 1e-8
+
+    # Calculate weights inversely proportional to loss
     inverse_losses = [1.0 / (u.get("loss", 1.0) + epsilon) for u in updates]
-    
-    # Step 2: Normalize these inverse losses so they sum to 1.0, creating our weights.
     total_inverse_loss = sum(inverse_losses)
     adaptive_weights = [il / total_inverse_loss for il in inverse_losses]
 
     print(f"[SERVER] Client losses: {[round(u.get('loss', 1.0), 4) for u in updates]}")
     print(f"[SERVER] Calculated adaptive weights: {[round(w, 4) for w in adaptive_weights]}")
-    
-    # --- Standard Weighted Averaging using the new weights ---
+
+    # Perform the weighted average of the weights
     new_weights = None
     for i, u in enumerate(updates):
         client_weight = adaptive_weights[i]
-        
+        client_weights = u["weights"]
         if new_weights is None:
-            new_weights = [w.astype(np.float32) * client_weight for w in u["weights"]]
+            new_weights = [layer * client_weight for layer in client_weights]
         else:
-            for j, w in enumerate(u["weights"]):
-                new_weights[j] += w.astype(np.float32) * client_weight
-    
+            for j, layer in enumerate(client_weights):
+                new_weights[j] += layer * client_weight
+
     return new_weights
 
+def weighted_average_adaptive(
+    updates: List[Dict[str, Any]]
+) -> Optional[List[np.ndarray]]:
+    """Performs simple federated averaging based on sample size.
 
-def quantize_model_tflite(model):
-    """
-    Converts a Keras model to a quantized TensorFlow Lite model.
-    Returns the model as a byte array.
-    """
-    converter = tf.lite.TFLiteConverter.from_keras_model(model)
-    
-    # This enables the standard 8-bit quantization
-    converter.optimizations = [tf.lite.Optimize.DEFAULT]
-    
-    # --- DEFINITIVE FIX for the LSTM Error ---
-    # This tells the converter to include TensorFlow's core operations (like TensorListReserve)
-    # in the final model instead of trying to convert them, which avoids the error.
-    converter.target_spec.supported_ops = [
-        tf.lite.OpsSet.TFLITE_BUILTINS, # Enable TFLite ops.
-        tf.lite.OpsSet.SELECT_TF_OPS    # Enable TensorFlow ops.
-    ]
-    # This flag is also recommended by the error message to prevent the conversion failure.
-    converter._experimental_lower_tensor_list_ops = False
-    # --- END OF FIX ---
+    This is the baseline (non-adaptive) aggregation method.
 
-    quantized_tflite_model = converter.convert()
-    return quantized_tflite_model
+    Args:
+        updates: A list of update dictionaries from clients.
 
-def set_tflite_model_weights(interpreter, weights):
+    Returns:
+        A list of NumPy arrays representing the new global model weights.
     """
-    Sets the weights of a TensorFlow Lite interpreter from a list of numpy arrays.
-    NOTE: This is a more advanced function. For our workflow, we will send the
-    already-quantized model, so the client won't need to set weights manually.
-    This is here for reference.
-    """
-    for i, tensor_details in enumerate(interpreter.get_tensor_details()):
-        if tensor_details['name'] in [w.name for w in model.trainable_weights]:
-             # Find the corresponding weight in the list and set it
-            interpreter.set_tensor(tensor_details['index'], weights[i])
+    if not updates:
+        return None
+
+    print("[SERVER - BASELINE] Using Simple Federated Averaging (Sample-based)...")
+
+    total_samples = sum(u.get("num_samples", 0) for u in updates)
+    if total_samples == 0:
+        return None  # Avoid division by zero
+
+    new_weights = None
+    for index, update_dict in enumerate(updates):
+        num_samples = update_dict.get("num_samples", 0)
+        weight = float(num_samples) / float(total_samples)
+        
+        client_weights = update_dict["weights"]
+
+        if new_weights is None:
+            new_weights = [layer * weight for layer in client_weights]
+        else:
+            for j, layer in enumerate(client_weights):
+                new_weights[j] += layer * weight
+
+    return new_weights

