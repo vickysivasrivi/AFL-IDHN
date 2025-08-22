@@ -60,7 +60,7 @@ def generate_visualizations(adaptive_report: dict, baseline_report: dict):
     ax.set_xticks(x); ax.set_xticklabels(labels); ax.legend(); ax.set_ylim(0, 1.1)
     ax.bar_label(rects1, padding=3, fmt='%.4f'); ax.bar_label(rects2, padding=3, fmt='%.4f')
     fig.tight_layout()
-    plt.savefig("summary_performance_comparison.png")
+    plt.savefig("result_images/summary_performance_comparison.png")
     print("Saved summary performance graph to 'summary_performance_comparison.png'")
 
     # ---- 3. Plot Per-Class F1-Score Comparison ----
@@ -72,7 +72,7 @@ def generate_visualizations(adaptive_report: dict, baseline_report: dict):
     plt.figure(figsize=(15, 7)); sns.barplot(data=df_plot_all, x='Class', y='F1-Score', hue='Model', palette=['skyblue', 'sandybrown'])
     plt.title('Per-Class F1-Score Comparison', fontsize=16); plt.xticks(rotation=45, ha="right"); plt.ylim(0, 1.1)
     plt.grid(axis='y', linestyle='--', alpha=0.7); plt.tight_layout()
-    plt.savefig("per_class_f1_comparison.png")
+    plt.savefig("result_images/per_class_f1_comparison.png")
     print("Saved per-class F1-score graph to 'per_class_f1_comparison.png'")
 
     # ---- 4. Plot Minority Class F1-Score Comparison ----
@@ -84,7 +84,7 @@ def generate_visualizations(adaptive_report: dict, baseline_report: dict):
     plt.figure(figsize=(12, 6)); sns.barplot(data=df_minority, x='Class', y='F1-Score', hue='Model', palette=['skyblue', 'sandybrown'])
     plt.title('F1-Score Comparison on Minority (Rare) Attack Classes', fontsize=16); plt.xticks(rotation=30, ha="right"); plt.ylim(0, 1.1)
     plt.grid(axis='y', linestyle='--', alpha=0.7); plt.tight_layout()
-    plt.savefig("minority_class_f1_comparison.png")
+    plt.savefig("result_images/minority_class_f1_comparison.png")
     print("Saved minority class F1-score graph to 'minority_class_f1_comparison.png'")
 
 

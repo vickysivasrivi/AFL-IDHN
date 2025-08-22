@@ -63,6 +63,50 @@ def build_model(n_features: int, num_classes: int) -> Model:
     )
     return model
 
+def create_dataset_from_csv(file_path: str, batch_size: int) -> Tuple[tf.data.Dataset, int, int]:
+    """
+    Loads data from a CSV file and creates a memory-efficient tf.data.Dataset.
+    This function streams data from the disk instead of loading it all into RAM.
+    """
+    script_dir = os.path.dirname(__file__)
+    full_path = os.path.join(script_dir, file_path)
+    if not os.path.exists(full_path):
+        raise FileNotFoundError(f"Data file not found at: {os.path.abspath(full_path)}")
+
+    # Read the header to get column names and count features
+    header_df = pd.read_csv(full_path, nrows=0)
+    column_names = header_df.columns.tolist()
+    label_name = "label"
+    feature_names = [name for name in column_names if name != label_name]
+    n_features = len(feature_names)
+    
+    # Get the total number of samples for calculating steps_per_epoch
+    # This is a quick way to count lines without loading the file
+    with open(full_path) as f:
+        num_samples = sum(1 for line in f) - 1 # Subtract 1 for header
+
+    # Use make_csv_dataset to stream from the file
+    dataset = tf.data.experimental.make_csv_dataset(
+        full_path,
+        batch_size=batch_size,
+        label_name=label_name,
+        num_epochs=1,  # We control epochs in model.fit
+        shuffle=True,
+        shuffle_buffer_size=10000,
+    )
+
+    # The dataset yields batches of (features_dict, labels)
+    # We need to pack the features_dict into a single tensor
+    def pack_features(features, label):
+        # Pack the dictionary of features into a single tensor
+        feature_tensor = tf.stack(list(features.values()), axis=1)
+        # Reshape for the model's Conv1D input shape (batch, 1, features)
+        return tf.reshape(feature_tensor, [-1, 1, n_features]), label
+
+    # Apply the transformation to each batch
+    dataset = dataset.map(pack_features)
+    
+    return dataset, n_features, num_samples
 
 def load_local_data(file_path: str) -> Tuple[np.ndarray, np.ndarray, int]:
     """Loads and prepares the local dataset for training."""
@@ -86,8 +130,11 @@ class FLClient:
 
     def __init__(self) -> None:
         """Initializes the client."""
-        (self.X, self.y, self.n_features) = load_local_data(DATA_FILE_PATH)
+        (self.train_dataset, self.n_features, self.num_samples) = create_dataset_from_csv(DATA_FILE_PATH, BATCH_SIZE)
+        
+        # Ensure the model is built with the correct number of features from the data
         self.local_model: Model = build_model(self.n_features, NUM_CLASSES)
+        
         self.current_round: int = 0
         self.weight_layers: Dict[int, np.ndarray] = {}
         self.expected_layers: int = 0
@@ -155,15 +202,20 @@ class FLClient:
 
     def _train_and_update(self) -> None:
         """Performs local training and publishes the updated model and metrics."""
+        # model.fit can directly consume a tf.data.Dataset object
+        # This is highly memory efficient.
         history = self.local_model.fit(
-            self.X, self.y, epochs=LOCAL_EPOCHS, batch_size=BATCH_SIZE, verbose=1
+            self.train_dataset,
+            epochs=LOCAL_EPOCHS,
+            steps_per_epoch=self.num_samples // BATCH_SIZE, # Important for generators/datasets
+            verbose=1
         )
         final_loss = history.history["loss"][-1]
         updated_weights = self.local_model.get_weights()
         payload = {
             "client_id": CLIENT_ID,
             "round": self.current_round,
-            "num_samples": len(self.X),
+            "num_samples": self.num_samples, # Use the counted number of samples
             "loss": final_loss,
             "meta": {},
             "weights": serialize_weights(updated_weights),
@@ -172,6 +224,7 @@ class FLClient:
         print(
             f"[{CLIENT_ID}] Published update for round {self.current_round} with loss: {final_loss:.4f}"
         )
+
 
     def loop_forever(self) -> None:
         """Starts the main client loop."""

