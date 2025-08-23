@@ -1,4 +1,19 @@
-# live_feature_detector.py
+#!/usr/bin/env python3
+
+"""
+Live Intrusion Detection System (IDS)
+
+Author: Vignesh Siva
+Date: August 2025
+Version: 7.0
+
+This script deploys a trained machine learning model to perform real-time 
+network intrusion detection. It captures live network traffic using Scapy, 
+extracts features from network flows, and uses the model to classify traffic 
+as benign or malicious. It includes a stateful alerting system to notify of 
+sustained attacks via MQTT and email.
+"""
+
 
 import time
 import numpy as np

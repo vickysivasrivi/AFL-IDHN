@@ -1,4 +1,17 @@
-# server_federated_mqtt.py
+#!/usr/bin/env python3
+
+"""
+Federated Learning Aggregation Server (Adaptive)
+
+Author: Vignesh Siva
+Date: August 2025
+Version: 3.0
+
+This script orchestrates the federated learning process using an adaptive averaging 
+strategy. It communicates with clients via MQTT, aggregates their model updates 
+based on their reported loss, and broadcasts the new global model. After all 
+training rounds are complete, it saves the final model weights.
+"""
 
 import os
 import time
@@ -37,7 +50,7 @@ TOPIC_GLOBAL_WEIGHTS_HEADER: str = "afl/global/weights/header"
 TOPIC_GLOBAL_WEIGHTS_CHUNK: str = "afl/global/weights/chunk"
 
 # --- Federated Learning Parameters ---
-TOTAL_ROUNDS: int = 1
+TOTAL_ROUNDS: int = 10
 MIN_CLIENTS_PER_ROUND: int = 1
 ROUND_TIMEOUT: int = 1200  # 20 minutes
 N_FEATURES: int = 78

@@ -1,4 +1,18 @@
-# server_baseline_mqtt.py
+#!/usr/bin/env python3
+
+"""
+Federated Learning Aggregation Server (Baseline)
+
+Author: Vignesh Siva
+Date: August 2025
+Version: 2.0
+
+This script implements a baseline federated learning server. It uses a simple 
+weighted averaging strategy based on the number of samples each client used for 
+training. It communicates with clients via MQTT, aggregates updates, and saves 
+the final global model after all rounds are complete.
+"""
+
 
 import os
 import time

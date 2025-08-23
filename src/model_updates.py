@@ -1,4 +1,19 @@
-# src/model_updater.py
+#!/usr/bin/env python3
+
+"""
+Client-Side Model Updater Service
+
+Author: Vignesh Siva
+Date: August 2025
+Version: 1.0
+
+This script runs as a background service on federated learning clients. It 
+subscribes to a specific MQTT topic and listens for a notification from the 
+server that a new global model is ready. Upon receiving the notification, it 
+downloads the new model weights file from a specified URL, allowing for 
+automated, scalable model deployment.
+"""
+
 import os
 import paho.mqtt.client as mqtt
 import subprocess

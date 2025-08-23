@@ -1,4 +1,17 @@
-# attack_script.py
+#!/usr/bin/env python3
+
+"""
+Simple UDP Flood Attack Script
+
+Author: Vignesh Siva
+Date: August 2025
+Version: 1.0
+
+This script is for testing the Intrusion Detection System. It uses the Scapy 
+library to launch a simple UDP flood attack against a specified target IP address 
+and port for a defined duration.
+WARNING: Only use this on a network you own and for testing purposes.
+"""
 
 from scapy.all import send, IP, UDP, RandShort
 import time

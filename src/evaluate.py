@@ -1,4 +1,17 @@
-# evaluate.py
+#!/usr/bin/env python3
+
+"""
+Model Evaluation Script
+
+Author: Vignesh Siva
+Date: August 2025
+Version: 1.0
+
+This script is used to evaluate the performance of a trained intrusion detection 
+model. It loads a specified model weights file, runs it against a held-out test 
+dataset, and prints a detailed classification report including precision, recall, 
+and F1-score for each class.
+"""
 
 import os
 import sys

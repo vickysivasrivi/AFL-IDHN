@@ -1,4 +1,19 @@
-# generate_report.py
+#!/usr/bin/env python3
+
+"""
+Performance Report and Visualization Generator
+
+Author: Vignesh Siva
+Date: August 2025
+Version: 1.0
+
+This script compares the performance of two trained models (e.g., adaptive vs. 
+baseline) by evaluating them on the same test data. It generates a detailed 
+side-by-side comparison table and creates several visualizations to highlight 
+differences in overall accuracy, per-class F1-scores, and performance on 
+minority classes.
+"""
+
 
 import os
 import sys

@@ -1,26 +1,40 @@
 version: "3.9"
 
 services:
-  federated-server:
-    build: .
-    container_name: federated-server
-    environment:
-      - MQTT_BROKER=broker.emqx.io
-      - MQTT_PORT=1883
-      - MQTT_USERNAME=vignesh_2181
-      - MQTT_PASSWORD=Vignesh@2181
-      - ROLE=server
+  broker:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
     volumes:
-      - ./src:/app/src
+      # These two volumes are now essential
+      - ./mosquitto_config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto_config/passwordfile:/mosquitto/config/passwordfile
 
-  federated-client:
+  server:
     build: .
-    container_name: federated-client
+    depends_on:
+      - broker
     environment:
-      - MQTT_BROKER=broker.emqx.io
+      - ROLE=server
+      - MQTT_HOST=broker
       - MQTT_PORT=1883
       - MQTT_USERNAME=vignesh_2181
       - MQTT_PASSWORD=Vignesh@2181
-      - ROLE=client
     volumes:
-      - ./src:/app/src
+      - ./saved_models:/app/saved_models
+      - ./data:/app/data
+
+  # --- ONE GENERIC, SCALABLE CLIENT SERVICE ---
+  client:
+    build: .
+    depends_on:
+      - broker
+    environment:
+      - ROLE=client
+      - MQTT_HOST=broker
+      - MQTT_PORT=1883
+      - MQTT_USERNAME=vignesh_2181
+      - MQTT_PASSWORD=Vignesh@2181
+      # CLIENT_ID is set by the start_clients.sh script
+    volumes:
+      - ./data:/app/data

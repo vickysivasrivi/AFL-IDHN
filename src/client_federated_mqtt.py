@@ -1,4 +1,17 @@
-# client_federated_mqtt.py
+#!/usr/bin/env python3
+
+"""
+Federated Learning Client for MQTT
+
+Author: Vignesh Siva
+Date: August 2025
+Version: 5.0
+
+This script acts as a client in a federated learning system. It connects to an 
+MQTT broker, waits for the global model and a start signal from the server, 
+trains the model on its local dataset, and sends the updated model weights 
+and training metrics back to the server.
+"""
 
 import os
 import json
@@ -238,5 +251,7 @@ if __name__ == "__main__":
     try:
         client = FLClient()
         client.loop_forever()
+    except KeyboardInterrupt:
+        print("\n[CLIENT] Manual shutdown.")
     except Exception as e:
         print(f"\n[CLIENT] FATAL ERROR: {e}\n")

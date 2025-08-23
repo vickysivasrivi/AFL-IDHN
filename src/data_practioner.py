@@ -1,3 +1,22 @@
+#!/usr/bin/env python3
+
+"""
+Data Partitioner for Federated Learning Simulation
+
+Author: Vignesh Siva
+Date: August 2025
+Version: 3.0
+
+This script is responsible for preparing the client datasets for a federated
+learning simulation. It takes a single, large, preprocessed dataset and splits
+it into several smaller partitions, one for each client.
+
+Crucially, it creates non-IID (Not Independent and Identically Distributed)
+partitions by distributing the classes (attack types) unevenly among clients.
+This simulates a more realistic real-world scenario where different clients
+are exposed to different types of network traffic and attacks.
+"""
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import os

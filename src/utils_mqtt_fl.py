@@ -1,4 +1,23 @@
-# utils_mqtt_fl.py
+#!/usr/bin/env python3
+
+"""
+Utility Functions for Federated Learning via MQTT
+
+Author: Vignesh Siva
+Date: August 2025
+Version: 8.0
+
+This script provides a collection of essential helper functions used throughout
+the federated learning system. It handles two primary responsibilities:
+
+1.  Serialization/Deserialization: Provides functions to convert complex data
+    structures, such as TensorFlow model weights (NumPy arrays), into a
+    JSON-serializable format for transmission over MQTT, and vice-versa.
+
+2.  Aggregation Strategies: Contains the core logic for the federated averaging
+    algorithms used by the server, including both the baseline (sample-based)
+    and the adaptive (loss-based) methods.
+"""
 
 import json
 import base64
