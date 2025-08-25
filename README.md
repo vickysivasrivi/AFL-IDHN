@@ -147,21 +147,38 @@ The **Weighted F1-Score** is paramount as it accounts for the natural class imba
 
 ## 7. Directory Structure
 ```
+.
 ├── data/
-│ ├── Preprocessed/ # Main dataset
-│ └── federated_data/ # Client data partitions
-├── saved_models/ # Saved global models
-├── src/
-│ ├── server_federated_mqtt.py
-│ ├── client_federated_mqtt.py
-│ ├── live_detection.py
-│ └── ... (other scripts)
-├── Dockerfile
-├── docker-compose.yml
-├── entrypoint.sh
-├── start_clients.sh
-├── requirements.txt
-└── README.md
+│   ├── Preprocessed/       # Location for the main preprocessed dataset
+│   └── federated_data/     # Stores the non-IID client data partitions
+│
+├── mosquitto_config/       # Configuration for the Dockerized MQTT broker
+│   ├── mosquitto.conf
+│   └── passwordfile
+│
+├── notebooks/              # Jupyter notebooks for research and development
+│   ├── eda.ipynb           # Exploratory Data Analysis of the dataset
+│   ├── data_preprocessing.ipynb # Steps to clean, scale, and prepare data
+│   └── cnn-lstm-model.ipynb     # Initial model design, training, and testing sandbox
+│
+├── saved_models/           # Output directory for the final trained global models (.h5)
+│
+├── src/                    # Source code for the live application
+│   ├── server_federated_mqtt.py
+│   ├── client_federated_mqtt.py
+│   ├── live_detection.py
+│   ├── model_updater.py
+│   ├── data_practioner.py
+│   ├── generate_report.py
+│   ├── attack_raspberrypi.py
+│   └── utils_mqtt_fl.py
+│
+├── Dockerfile              # Blueprint for building the Python application container
+├── docker-compose.yml      # Defines and orchestrates all services (broker, server, client)
+├── entrypoint.sh           # Smart script to run the correct role (server/client) in a container
+├── requirements.txt        # List of all Python dependencies for the project
+├── start_clients.sh        # Scalable script to launch a large number of client containers
+└── README.md               # Project documentation for GitHub
 ```
 
 ## 8. Scripts Overview
