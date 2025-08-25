@@ -1,4 +1,4 @@
-﻿# Federated Intrusion Detection System with Live Alerting
+﻿# Adaptive Federated Learning for Context-Aware Intrusion Detection in Heterogeneous IoT Networks
 
 ![Python Version](https://img.shields.io/badge/Python-3.10-blue.svg)
 ![Framework](https://img.shields.io/badge/Framework-TensorFlow-orange.svg)
