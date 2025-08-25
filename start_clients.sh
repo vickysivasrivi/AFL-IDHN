@@ -24,8 +24,7 @@ for i in $(seq 0 $(($NUM_CLIENTS - 1))); do
     # Use 'docker-compose run' to start a new instance of the 'client' service.
     # -d: Run in detached (background) mode.
     # --rm: Automatically remove the container when it stops.
-    # -e CLIENT_ID=$i: This is the magic. We set the CLIENT_ID environment variable
-    #                  for this specific container. Our entrypoint.sh script will use this.
+    # -e CLIENT_ID=$i: Our entrypoint.sh script will use this.
     # --name "client_${i}": Give each container a unique, predictable name.
     docker-compose run -d --rm \
         -e CLIENT_ID=$i \
