@@ -52,7 +52,7 @@ TOPIC_GLOBAL_WEIGHTS_CHUNK: str = "afl/global/weights/chunk"
 # --- Federated Learning Parameters ---
 TOTAL_ROUNDS: int = 10
 MIN_CLIENTS_PER_ROUND: int = 1
-ROUND_TIMEOUT: int = 1200  # 20 minutes
+ROUND_TIMEOUT: int = 600  # 10 minutes
 N_FEATURES: int = 78
 NUM_CLASSES: int = 15
 

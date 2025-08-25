@@ -78,7 +78,6 @@ def load_test_data(file_path: str) -> Tuple[np.ndarray, np.ndarray]:
     return X_test_reshaped, y_test.values.astype(np.int32)
 
 
-# --- NEW: Function to perform evaluation and RETURN the results ---
 def evaluate_model(model_weights_path: str, test_data: Tuple[np.ndarray, np.ndarray]) -> Dict:
     """Evaluates a model and returns its classification report as a dictionary.
     
@@ -137,7 +136,6 @@ if __name__ == "__main__":
             print("           Classification Report")
             print("="*60)
 
-            # <<< --- DEFINITIVE FIX: Separate the model creation, loading, and prediction --- >>>
             # 1. Create a temporary model instance
             temp_model = build_model(N_FEATURES, NUM_CLASSES)
             # 2. Load the weights into it (this returns None)

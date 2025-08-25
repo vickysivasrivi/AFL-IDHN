@@ -1,11 +1,9 @@
 #!/bin/bash
 
 # --- Environment Setup ---
-# This section ensures the script uses the correct Conda environment.
-
-# IMPORTANT: Replace this path with the correct path to your conda.sh
-# Note the forward slashes and how C:\ is replaced with /c/ for Git Bash
 CONDA_PATH="/c/Users/vicky/Miniconda3/etc/profile.d/conda.sh"
+# # source ~/miniconda3/etc/profile.d/conda.sh
+# CONDA_PATH="$HOME/miniconda3/etc/profile.d/conda.sh"
 
 if [ -f "$CONDA_PATH" ]; then
     source "$CONDA_PATH"
@@ -17,7 +15,8 @@ fi
 echo "Activating Conda environment 'thesis'..."
 conda activate thesis
 
-# --- Configuration (remains the same) ---
+
+# --- Configuration ---
 BROKER_HOST="192.168.0.250"
 SERVER_IP="192.168.0.250"
 HTTP_PORT="8000"
@@ -53,8 +52,9 @@ echo "================================================="
 # IMPROVEMENT: Add 'set -e' to make the script exit immediately if a command fails
 set -e
 
-# Now this python command will use the activated 'thesis' environment
+# Trigger the Server Script to run FL 
 python src/server_federated_mqtt.py
+# python src/server_baseline_mqtt.py
 
 # 'set +e' returns to the default behavior (don't exit on error)
 set +e
@@ -70,8 +70,8 @@ if [ -f "$MODEL_FILE_PATH" ]; then
     echo "STEP 4: Publishing notification to MQTT topic '$MQTT_TOPIC_NOTIFICATION'"
     echo "Download URL: $DOWNLOAD_URL"
     
-    # This command will now be found in the 'thesis' environment
-    paho_mqtt pub --host "$BROKER_HOST" -t "$MQTT_TOPIC_NOTIFICATION" -m "$DOWNLOAD_URL"
+    # Publish the message to the MQTT Broker
+    python src/mqtt_publish.py "$BROKER_HOST" "$MQTT_TOPIC_NOTIFICATION" "$DOWNLOAD_URL" "$MQTT_USERNAME" "$MQTT_PASSWORD"
     
     echo "SUCCESS: Notification published."
 else

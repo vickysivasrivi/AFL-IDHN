@@ -22,7 +22,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
-# --- Import the evaluation functions from your evaluate.py script ---
 from evaluate import load_test_data, evaluate_model, CLASS_NAMES
 
 # --- Configuration ---
@@ -43,7 +42,7 @@ def generate_visualizations(adaptive_report: dict, baseline_report: dict):
     """
     Takes the two report dictionaries and generates a summary table and plots.
     """
-    # ---- 1. Create and Print the Summary Table ----
+    # ---- Create and Print the Summary Table ----
     f1_scores = {
         'Class': CLASS_NAMES + ['MACRO AVG F1', 'WEIGHTED AVG F1'],
         'Baseline F1': [baseline_report[c]['f1-score'] for c in CLASS_NAMES] +
@@ -61,7 +60,7 @@ def generate_visualizations(adaptive_report: dict, baseline_report: dict):
     print(df_summary.to_string(index=False))
     print("="*80 + "\n")
     
-    # ---- 2. Plot Overall Performance Comparison ----
+    # ---- Plot Overall Performance Comparison ----
     metrics = ['accuracy', 'macro avg', 'weighted avg']
     labels = ['Overall Accuracy', 'Macro Avg F1-Score', 'Weighted Avg F1-Score']
     baseline_scores = [baseline_report[m]['f1-score'] if m != 'accuracy' else baseline_report[m] for m in metrics]
@@ -78,7 +77,7 @@ def generate_visualizations(adaptive_report: dict, baseline_report: dict):
     plt.savefig("result_images/summary_performance_comparison.png")
     print("Saved summary performance graph to 'summary_performance_comparison.png'")
 
-    # ---- 3. Plot Per-Class F1-Score Comparison ----
+    # ---- Plot Per-Class F1-Score Comparison ----
     df_plot_all = pd.DataFrame({
         'Class': CLASS_NAMES,
         'Baseline': [baseline_report[c]['f1-score'] for c in CLASS_NAMES],
@@ -90,7 +89,7 @@ def generate_visualizations(adaptive_report: dict, baseline_report: dict):
     plt.savefig("result_images/per_class_f1_comparison.png")
     print("Saved per-class F1-score graph to 'per_class_f1_comparison.png'")
 
-    # ---- 4. Plot Minority Class F1-Score Comparison ----
+    # ---- Plot Minority Class F1-Score Comparison ----
     df_minority = pd.DataFrame({
         'Class': MINORITY_CLASSES,
         'Baseline': [baseline_report[c]['f1-score'] for c in MINORITY_CLASSES],

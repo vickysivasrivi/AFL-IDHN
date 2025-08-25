@@ -27,7 +27,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Conv1D, LSTM, Dense, Dropout, Reshape
 
-# --- IMPORTANT: Import the baseline (non-adaptive) aggregation function ---
+# Utility functions for serialization and aggregation
 from utils_mqtt_fl import (
     serialize_weights,
     deserialize_weights,
@@ -53,12 +53,10 @@ TOPIC_GLOBAL_WEIGHTS_CHUNK: str = "afl/global/weights/chunk"
 # --- Federated Learning Parameters ---
 TOTAL_ROUNDS: int = 10
 MIN_CLIENTS_PER_ROUND: int = 1
-ROUND_TIMEOUT: int = 120  # 2 minutes
+ROUND_TIMEOUT: int = 600  # 10 minutes
 N_FEATURES: int = 78
 NUM_CLASSES: int = 15
 
-
-# --- UNIFIED TensorFlow/Keras Model Definition ---
 def build_model(n_features: int, num_classes: int) -> Model:
     """Creates a lightweight CNN-LSTM model."""
     model_input = Input(shape=(1, n_features))
@@ -163,7 +161,6 @@ class AggregationServer:
             print("[SERVER - BASELINE] No updates to aggregate.")
             return
 
-        # --- KEY DIFFERENCE: Use the simple weighted average ---
         new_weights = weighted_average_adaptive(self.updates)
 
         if new_weights:

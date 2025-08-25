@@ -43,13 +43,12 @@ alert_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=f"alert_c
 alert_client.connect("192.168.0.250", 1883, 60)
 alert_client.loop_start() 
 
-# <<< NEW: Configuration for Sustained Alerting >>>
 # The duration an attack must last to trigger the significant alert
 SUSTAINED_ATTACK_THRESHOLD_SECONDS = 10 
 # How long to wait before "forgetting" an attacker after their last known activity
 ATTACKER_COOLDOWN_SECONDS = 60
 
-# Model Parameters (must match your training)
+# Model Parameters 
 N_FEATURES = 78
 NUM_CLASSES = 15
 CLASS_NAMES = [
@@ -59,7 +58,7 @@ CLASS_NAMES = [
     'Web Attack - XSS'
 ]
 
-# This is the exact order of columns from the CIC-IDS2017 dataset, minus the label
+# This is the exact order of columns from the CIC-IDS2017 dataset
 FEATURE_COLUMNS = [
     'Destination Port', 'Flow Duration', 'Total Fwd Packets',
     'Total Backward Packets', 'Total Length of Fwd Packets',
@@ -91,7 +90,6 @@ FEATURE_COLUMNS = [
 active_flows = defaultdict(dict)
 flows_lock = Lock()
 
-# <<< NEW: Global tracker for sustained attacks >>>
 sustained_attack_tracker = {}
 tracker_lock = Lock()
 
@@ -138,7 +136,6 @@ def process_packet(packet):
             active_flows[flow_key] = {'packets': [], 'start_time': timestamp, 'last_seen': timestamp}
         
         flow_info = {'timestamp': timestamp, 'len': packet_len}
-        # <<< NEW: Determine which IP is the source for this specific packet >>>
         if IP in packet:
             flow_info['src_ip'] = packet[IP].src
         active_flows[flow_key]['packets'].append(flow_info)
@@ -163,7 +160,6 @@ def analyze_flows(model):
                 flow_data = active_flows.pop(key)
                 Thread(target=extract_and_predict, args=(flow_data, model, key)).start()
 
-        # <<< NEW: Periodic cleanup of the sustained attack tracker >>>
         with tracker_lock:
             stale_attackers = []
             for ip, data in sustained_attack_tracker.items():
@@ -179,7 +175,7 @@ def extract_and_predict(flow_data, model, flow_key):
     packets = flow_data['packets']
     if len(packets) < 2: return
 
-    # --- Feature Extraction (Simplified Subset) ---
+    # --- Feature Extraction ---
     features = {}
     flow_duration = (packets[-1]['timestamp'] - packets[0]['timestamp']) * 1_000_000
     fwd_packets = [p for p in packets if p.get('src_ip') == flow_key[0][0]]
@@ -207,9 +203,8 @@ def extract_and_predict(flow_data, model, flow_key):
     predicted_class_name = CLASS_NAMES[predicted_class_index]
     confidence = np.max(prediction_proba) * 100
     
-    # <<< NEW: Sustained Alerting Logic >>>
     if predicted_class_name != 'BENIGN':
-        # Identify the attacker IP (the one sending forward packets in this flow)
+        # Identify the attacker IP
         attacker_ip = flow_key[0][0] if fwd_packets else flow_key[1][0]
         now = time.time()
         
@@ -258,8 +253,7 @@ def send_email_alert(attacker_ip, attack_type, confidence, duration):
     """Sends a formatted email alert."""
     
     # --- Configuration ---
-    # The recipient's email address
-    email_recipient = "vickysivasrivi@gmail.com"
+    email_recipient = "info@securityteam.avx"
     
     # Get credentials from environment variables for security
     email_user = os.environ.get('EMAIL_USER')

@@ -1,6 +1,7 @@
 data/
 Preprocessed/
 preprocessing.py
+thesis/
 *.zip
 *.csv
 __pycache__/

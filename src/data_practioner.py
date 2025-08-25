@@ -22,11 +22,10 @@ from sklearn.model_selection import train_test_split
 import os
 
 # --- Configuration ---
-# Path to the preprocessed file
 # PREPROCESSED_DATA_PATH = 'data/Preprocessed/preprocessed_2017.csv'
 PREPROCESSED_DATA_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    '..', # This goes up one level from 'src'
+    '..', 
     'data',
     'Preprocessed',
     'cicids2017_preprocessed.csv'
@@ -88,14 +87,14 @@ if __name__ == "__main__":
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
     try:
-        # 1. Load the preprocessed dataset
+        # Load the preprocessed dataset
         preprocessed_df = pd.read_csv(PREPROCESSED_DATA_PATH)
         print(f"Loaded preprocessed data with shape: {preprocessed_df.shape}")
         
-        # 2. Create non-IID partitions
+        # Create non-IID partitions
         partitions = create_non_iid_partitions(preprocessed_df, NUM_CLIENTS, target_col='label')
         
-        # 3. Save each partition to a separate CSV file
+        # Save each partition to a separate CSV file
         for i, client_df in enumerate(partitions):
             # Shuffle each client's data one last time for good measure
             client_df = client_df.sample(frac=1, random_state=42).reset_index(drop=True)

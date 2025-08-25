@@ -56,12 +56,10 @@ TOPIC_GLOBAL_START: str = "afl/global/start_round"
 TOPIC_GLOBAL_WEIGHTS_HEADER: str = "afl/global/weights/header"
 TOPIC_GLOBAL_WEIGHTS_CHUNK: str = "afl/global/weights/chunk"
 
-# --- Model Parameters (must match server) ---
+# --- Model Parameters ---
 N_FEATURES: int = 78
 NUM_CLASSES: int = 15
 
-
-# --- UNIFIED TensorFlow/Keras Model Definition ---
 def build_model(n_features: int, num_classes: int) -> Model:
     """Creates a lightweight CNN-LSTM model."""
     model_input = Input(shape=(1, n_features))
@@ -94,7 +92,6 @@ def create_dataset_from_csv(file_path: str, batch_size: int) -> Tuple[tf.data.Da
     n_features = len(feature_names)
     
     # Get the total number of samples for calculating steps_per_epoch
-    # This is a quick way to count lines without loading the file
     with open(full_path) as f:
         num_samples = sum(1 for line in f) - 1 # Subtract 1 for header
 
@@ -216,7 +213,6 @@ class FLClient:
     def _train_and_update(self) -> None:
         """Performs local training and publishes the updated model and metrics."""
         # model.fit can directly consume a tf.data.Dataset object
-        # This is highly memory efficient.
         history = self.local_model.fit(
             self.train_dataset,
             epochs=LOCAL_EPOCHS,
