@@ -3,9 +3,6 @@
 # Exit immediately if any command fails
 set -e
 
-# This script checks the ROLE environment variable and runs the
-# appropriate Python script.
-
 if [ "$ROLE" = "server" ]; then
     echo "--- Starting in SERVER mode ---"
     exec python src/server_federated_mqtt.py
